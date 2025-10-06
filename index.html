@@ -1,0 +1,165 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio e Imagen Giratoria con Animación de Corazones</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-image: url('descarga.jpeg');
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .circular-image {
+            width: 270px;
+            height: 270px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0s linear;
+        }
+
+        .spinning {
+            animation: spin 7s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        audio {
+            width: 80%;
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+
+        .heart {
+            position: absolute;
+            bottom: 0;
+            font-size: 24px;
+            color: red;
+            animation: rise 3s linear forwards;
+            user-select: none;
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img src="file.png" alt="Imagen Circular" class="circular-image">
+    <audio controls id="audioPlayer">
+        <source src="querer_querernos.mp3" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
+    </audio>
+
+    <script>
+        const audio = document.getElementById('audioPlayer');
+        const image = document.querySelector('.circular-image');
+
+        // Añadir o quitar la clase 'spinning' según el estado del audio
+        audio.addEventListener('play', () => {
+            image.classList.add('spinning');
+        });
+
+        audio.addEventListener('pause', () => {
+            image.classList.remove('spinning');
+        });
+
+        audio.addEventListener('ended', () => {
+            image.classList.remove('spinning');
+        });
+
+        // Animación de corazones
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            document.body.appendChild(heart);
+
+            setTimeout(() => {
+                heart.remove();
+            }, 3000);
+        }
+
+        setInterval(createHeart, 500);
+
+        // Ajustar la imagen y el audio para pantallas móviles
+        window.addEventListener('resize', () => {
+            const img = document.querySelector('.circular-image');
+            const audio = document.querySelector('audio');
+            if (window.innerWidth < 600) {
+                img.style.width = '120px';
+                img.style.height = '120px';
+                audio.style.width = '90%';
+            } else {
+                img.style.width = '150px';
+                img.style.height = '150px';
+                audio.style.width = '80%';
+            }
+        });
+    </script>
+</body>
+</html>
